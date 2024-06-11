@@ -123,24 +123,24 @@ const exponentialBackoff = async (fn, retries = 5, delay = 1000) => {
 };
 
 app.post('/generate-response', async function(req, res) {
-  const { trackNames } = req.body;
+  const { trackNames, artistNames } = req.body;
 
-  if (!trackNames || !Array.isArray(trackNames)) {
-    return res.status(400).send({ error: 'Track names are required and should be an array' });
+  if (!trackNames || !Array.isArray(trackNames) || !artistNames || !Array.isArray(artistNames)) {
+    return res.status(400).send({ error: 'Track names and artist names are required and should be arrays' });
   }
 
-  const userQuery = `Generate a psychological reading based on the following top tracks. You are to do this reading in a very astrological and superstitious, like an oracle reading. Make the reading very Tarot-card based, as in include a past, present, and future detailing to make it a little bit alluring and other-worldly. You don't have to necessarily use the names of the tracks in the reading. But please provide a reference to the song title when it is being used in the reading.Please do not use any bold lettering nor anything beyond just plain text and Colons. Here are the person's top tracks: ${trackNames.join(', ')}`;
+  const userQuery = `Generate a psychological reading based on the following top tracks and artists. You are to do this reading in a very astrological and superstitious manner, like an oracle reading. Make the reading like a personality test, but also try to make predictions and mystic relevations like including details about past, present, and future. DO NOT USE bold lettering nor anything other than plain text. You may use emojis, but that is about it. Here are the person's top tracks: ${trackNames.join(', ')}. And here are their top artists: ${artistNames.join(', ')}`;
 
   try {
     const response = await exponentialBackoff(async () => {
       return await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are an oracle providing astrological and Tarot-like readings based on Spotify top tracks. Be detailed and creative.' },
+          { role: 'system', content: 'You are an oracle providing astrological and divination-type readings based on the users Spotify top tracks and artists. Be detailed, specific, and creative. You are to basically try and read this person based off their listening patterns. You are allowed to make guesses about this person, almost like how Tarot-cards assume Past,Present, and future, and you are allowed to make predicitons about this person our give them divine guidance. Try and include the vibes of the Songs or the artists based off the information you know about them, and try to incorporate frequencies to make the claims sound more grounded and true. Give the illusion that this is a real divination reading. Be straightforward and try not to be all fluttery with your words. You are direct, cutthroat, and you speak with certainty. You reveal good things and also things that the person might struggle with, but you offer guidance and solutions based of the vibes of their listening patterns. Also refrain from using dear seeker and other adressions like that.' },
           { role: 'user', content: userQuery }
         ],
-        max_tokens: 1500, // Increase max_tokens to allow for a more detailed response
-        temperature: 0.9, // Increase temperature for more creative responses
+        max_tokens: 2000,
+        temperature: 0.9,
         n: 1
       });
     });
@@ -186,22 +186,26 @@ app.get('/refresh_token', function(req, res) {
     });
 });
 
-app.get('/api/top-tracks', async function(req, res) {
+app.get('/api/top-tracks-and-artists', async function(req, res) {
   const { access_token } = req.query;
 
   if (!access_token) {
     return res.status(400).send({ error: 'Access token is required' });
   }
 
-  // Set the access token on the API object
   SpotifyWebApi.setAccessToken(access_token);
 
   try {
-    const data = await SpotifyWebApi.getMyTopTracks({ limit: 10, time_range: 'medium_term' });
-    res.send(data.body);
+    const topTracksData = await SpotifyWebApi.getMyTopTracks({ limit: 10, time_range: 'medium_term' });
+    const topArtistsData = await SpotifyWebApi.getMyTopArtists({ limit: 10, time_range: 'medium_term' });
+    
+    res.send({
+      topTracks: topTracksData.body,
+      topArtists: topArtistsData.body
+    });
   } catch (error) {
-    console.error('Failed to fetch top tracks', error);
-    res.status(500).send({ error: 'Failed to fetch top tracks' });
+    console.error('Failed to fetch top tracks or top artists', error);
+    res.status(500).send({ error: 'Failed to fetch top tracks or top artists' });
   }
 });
 
