@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><img src="spotify.png" alt="Spotify Logo"> Sporacle</h1>
+            <h1><img src="Spotify.png" alt="Spotify Logo"> Sporacle</h1>
             <h2>Let Sporacle use the instincts and frequencies of your music taste to reveal your path in life and what's in store for you in the near future!</h2>
         </div>
         <div class="quiz">
@@ -52,7 +52,7 @@
             function showLoadingScreen(images) {
                 const loadingScreen = document.getElementById('loading-screen');
                 const loadingImagesContainer = document.getElementById('loading-images');
-                loadingImagesContainer.innerHTML = ''; // Clear previous images
+                loadingImagesContainer.innerHTML = ''; 
                 images.forEach((image, index) => {
                     const img = document.createElement('img');
                     img.src = image.url;
@@ -86,7 +86,7 @@
                         success: function(response) {
                             console.log('Top tracks and artists response:', response); // Log the response to the console
 
-                            // Show loading screen with top track images
+        
                             const topTrackImages = response.topTracks.items.map(item => item.album.images[1]);
                             showLoadingScreen(topTrackImages);
 
@@ -115,11 +115,11 @@
                     document.getElementById('response').innerText = data.response || data.error;
                     $('#login').hide();
                     $('#loggedin').show();
-                    hideLoadingScreen(); // Hide loading screen when the reading is ready
+                    hideLoadingScreen(); 
                 })
                 .catch(error => {
                     console.error('Error generating reading:', error);
-                    hideLoadingScreen(); // Hide loading screen in case of error
+                    hideLoadingScreen();
                 });
             }
         })();
